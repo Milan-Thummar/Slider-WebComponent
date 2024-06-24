@@ -7,8 +7,9 @@ class ImageSlider extends HTMLElement {
   private slidesData: SlideData[] = [];
   private numSlides: number = 0;
   private slideInterval: NodeJS.Timeout | null = null;
-  private sliderButtons: HTMLElement;
   private slideContent: HTMLElement;
+  private sliderButtons: HTMLElement;
+  private timeLine: HTMLElement | null = null;
   private isLoading: boolean = true;
 
   constructor() {
@@ -116,11 +117,13 @@ class ImageSlider extends HTMLElement {
       <div class="slider__overlay"></div>
       <div class="slider__slide-content" id="slideContent"></div>
       <div class="slider__controls">
+        <slider-timeline id="timeLine"></slider-timeline>
         <slider-buttons></slider-buttons>
       </div>
     `;
     this.slideContent = shadow.querySelector("#slideContent")!;
     this.sliderButtons = shadow.querySelector("slider-buttons")!;
+    this.timeLine = shadow.querySelector("#timeLine")!;
 
     this.sliderButtons.addEventListener("prev", () => this.prevSlide());
     this.sliderButtons.addEventListener("next", () => this.nextSlide());
@@ -165,6 +168,7 @@ class ImageSlider extends HTMLElement {
         this.slidesData = products;
         this.numSlides = products.length;
         this.renderSlides();
+        this.updateTimeLine();
         this.renderSlideContent();
       }
     } catch (error) {
@@ -203,6 +207,7 @@ class ImageSlider extends HTMLElement {
     this.stopSlideInterval();
     this.currentIndex = newIndex;
     this.updateSlider();
+    this.updateTimeLine();
     this.renderSlideContent();
     this.startSlideInterval();
   }
@@ -220,6 +225,12 @@ class ImageSlider extends HTMLElement {
   private updateSlider() {
     const slider = this.shadowRoot!.getElementById("slider") as HTMLElement;
     slider.style.transform = `translateX(-${this.currentIndex * 100}%)`;
+  }
+
+  private updateTimeLine() {
+    if (this.timeLine) {
+      (this.timeLine as any).setProgress(this.currentIndex, this.numSlides);
+    }
   }
 }
 

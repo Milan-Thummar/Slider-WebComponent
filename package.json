@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "sass": "^1.77.6",
+    "ts-loader": "^9.5.1",
     "typescript": "^5.5.2"
   }
 }
