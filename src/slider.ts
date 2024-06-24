@@ -6,6 +6,8 @@ class ImageSlider extends HTMLElement {
   private currentIndex: number = 0;
   private slidesData: SlideData[] = [];
   private numSlides: number = 0;
+  private slideInterval: NodeJS.Timeout | null = null;
+  private sliderButtons: HTMLElement;
   private slideContent: HTMLElement;
   private isLoading: boolean = true;
 
@@ -69,6 +71,38 @@ class ImageSlider extends HTMLElement {
           }
         }
       }
+
+      &__controls {
+        position: absolute;
+        bottom: 5%;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 90%;
+        z-index: 2;
+      }
+
+      @media only screen and (max-width: 768px) {
+        &__slide-content {
+          width: 70%;
+    
+          h2 {
+            font-size: 1.75rem;
+          }
+    
+          p {
+            font-size: 1rem;
+          }
+        }
+      }
+    
+      @media only screen and (max-width: 480px) {
+        &__slide-content {
+          width: 90%;
+        }
+      }
     }
     `;
     const result = sass.compileString(ScssInput);
@@ -81,9 +115,43 @@ class ImageSlider extends HTMLElement {
       <div class="slider" id="slider"></div>
       <div class="slider__overlay"></div>
       <div class="slider__slide-content" id="slideContent"></div>
+      <div class="slider__controls">
+        <slider-buttons></slider-buttons>
+      </div>
     `;
     this.slideContent = shadow.querySelector("#slideContent")!;
+    this.sliderButtons = shadow.querySelector("slider-buttons")!;
+
+    this.sliderButtons.addEventListener("prev", () => this.prevSlide());
+    this.sliderButtons.addEventListener("next", () => this.nextSlide());
+
     this.initializeSlider();
+  }
+
+  connectedCallback() {
+    setTimeout(() => {
+      this.startSlideInterval();
+    }, 500);
+  }
+
+  disconnectedCallback() {
+    if (this.slideInterval) {
+      clearInterval(this.slideInterval);
+    }
+    this.sliderButtons.removeEventListener("prev", this.prevSlide);
+    this.sliderButtons.removeEventListener("next", this.nextSlide);
+  }
+
+  private startSlideInterval() {
+    this.slideInterval = setInterval(() => {
+      this.nextSlide();
+    }, 3000);
+  }
+
+  private stopSlideInterval() {
+    if (this.slideInterval) {
+      clearInterval(this.slideInterval);
+    }
   }
 
   private async initializeSlider(): Promise<void> {
@@ -129,6 +197,29 @@ class ImageSlider extends HTMLElement {
       <button id="moreInfoBtn">More Info</button>
       <button id="contactBtn">Contact</button>
     `;
+  }
+
+  private changeSlide(newIndex: number) {
+    this.stopSlideInterval();
+    this.currentIndex = newIndex;
+    this.updateSlider();
+    this.renderSlideContent();
+    this.startSlideInterval();
+  }
+
+  private prevSlide() {
+    const newIndex = (this.currentIndex - 1 + this.numSlides) % this.numSlides;
+    this.changeSlide(newIndex);
+  }
+
+  private nextSlide() {
+    const newIndex = (this.currentIndex + 1) % this.numSlides;
+    this.changeSlide(newIndex);
+  }
+
+  private updateSlider() {
+    const slider = this.shadowRoot!.getElementById("slider") as HTMLElement;
+    slider.style.transform = `translateX(-${this.currentIndex * 100}%)`;
   }
 }
 
