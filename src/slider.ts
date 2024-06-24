@@ -1,6 +1,9 @@
 import sass from "sass";
 import { SlideData } from "./types/types";
 import { fetchProduct } from "./components/fetchProduct/fetchProduct";
+import "./components/sliderButtons/sliderButtons";
+import "./components/silderTimelines/sliderTimelines";
+import "./components/slideImage/slideImage";
 
 class ImageSlider extends HTMLElement {
   private currentIndex: number = 0;
@@ -10,6 +13,8 @@ class ImageSlider extends HTMLElement {
   private slideContent: HTMLElement;
   private sliderButtons: HTMLElement;
   private timeLine: HTMLElement | null = null;
+  private touchstartX: number = 0;
+  private touchendX: number = 0;
   private isLoading: boolean = true;
 
   constructor() {
@@ -128,6 +133,19 @@ class ImageSlider extends HTMLElement {
     this.sliderButtons.addEventListener("prev", () => this.prevSlide());
     this.sliderButtons.addEventListener("next", () => this.nextSlide());
 
+    if (window.innerWidth <= 480) {
+      this.addEventListener(
+        "touchstart",
+        (event) => this.handleTouchStart(event),
+        false
+      );
+      this.addEventListener(
+        "touchend",
+        (event) => this.handleTouchEnd(event),
+        false
+      );
+    }
+
     this.initializeSlider();
   }
 
@@ -230,6 +248,31 @@ class ImageSlider extends HTMLElement {
   private updateTimeLine() {
     if (this.timeLine) {
       (this.timeLine as any).setProgress(this.currentIndex, this.numSlides);
+    }
+  }
+
+  private handleTouchStart(event: TouchEvent) {
+    if (window.innerWidth <= 480) {
+      this.touchstartX = event.changedTouches[0].clientX;
+    }
+  }
+
+  private handleTouchEnd(event: TouchEvent) {
+    if (window.innerWidth <= 480) {
+      this.touchendX = event.changedTouches[0].clientX;
+      this.handleGesture();
+    }
+  }
+
+  private handleGesture() {
+    let delta = this.touchendX - this.touchstartX;
+    if (window.innerWidth <= 480) {
+      const swipeThreshold = 50;
+      if (delta < -swipeThreshold) {
+        this.nextSlide();
+      } else if (delta > swipeThreshold) {
+        this.prevSlide();
+      }
     }
   }
 }
